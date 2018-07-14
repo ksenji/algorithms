@@ -57,11 +57,11 @@ public class Solver {
   }
 
   public int moves() {
-    return sol != null ? sol.path.size() - 1 : -1;
+    return isSolvable() ? sol.path.size() - 1 : -1;
   }
 
   public Iterable<Board> solution() {
-    return sol != null ? sol.path::iterator : null;
+    return isSolvable() ? sol.path::iterator : null;
   }
 
   private static List<Board> copyAndAdd(List<Board> paths, Board board) {
