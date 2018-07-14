@@ -1,5 +1,3 @@
-package test;
-
 /******************************************************************************
  *  Compilation:  javac Point.java
  *  Execution:    java Point
