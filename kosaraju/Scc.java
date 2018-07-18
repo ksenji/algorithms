@@ -114,11 +114,19 @@ public class Scc {
   }
 
   public static void main(String[] args) throws IOException {
-    Scc scc = new Scc(875714, args[0]);
+    Scc scc = new Scc(Integer.parseInt(args[0])/* Number of Vertices */,
+        args[1] /* File name containing directed edges in "u v" format without quotes */);
     Iterator<Integer> iter = scc.iterator();
     int k = 0;
-    while (iter.hasNext() && k++ <= 5) {
-      System.out.println(iter.next());
+    StringBuilder sb = new StringBuilder();
+    while (iter.hasNext() && k++ <= 10) {
+      sb.append(iter.next());
+      sb.append(",");
     }
+    if (sb.length() > 0) {
+      sb.setLength(sb.length() - 1);
+    }
+    System.out.println(sb.toString());
+    // Prints 434821,968,459,313,211,205,197,177,173,168,162 
   }
 }
