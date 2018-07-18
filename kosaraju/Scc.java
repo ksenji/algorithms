@@ -12,18 +12,18 @@ public class Scc {
 
   private static final class Graph {
 
-    private final LinkedList<Integer>[] outAdj;
+    private final LinkedList<Integer>[] normal;
 
-    private final LinkedList<Integer>[] inAdj;
+    private final LinkedList<Integer>[] reverse;
 
     Graph(int V) {
-      this.outAdj = (LinkedList<Integer>[]) new LinkedList[V];
-      this.inAdj = (LinkedList<Integer>[]) new LinkedList[V];
+      this.normal = (LinkedList<Integer>[]) new LinkedList[V];
+      this.reverse = (LinkedList<Integer>[]) new LinkedList[V];
     }
 
     public void addEdge(int v, int w) {
-      addEdge(outAdj, v, w);
-      addEdge(inAdj, w, v);
+      addEdge(normal, v, w);
+      addEdge(reverse, w, v);
     }
 
     private void addEdge(LinkedList<Integer>[] adj, int v, int w) {
@@ -58,7 +58,7 @@ public class Scc {
             int top = s.pop();
             if (!visited[top]) {
               visited[top] = true;
-              LinkedList<Integer> edges = g.inAdj[top];
+              LinkedList<Integer> edges = g.reverse[top];
               if (edges != null) {
                 for (int edge : edges) {
                   s.push(edge);
@@ -84,7 +84,7 @@ public class Scc {
             if (!visited[top]) {
               visited[top] = true;
               count++;
-              LinkedList<Integer> edges = g.outAdj[top];
+              LinkedList<Integer> edges = g.normal[top];
               if (edges != null) {
                 for (int edge : edges) {
                   s.push(edge);
