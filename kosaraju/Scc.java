@@ -98,16 +98,20 @@ public class Scc {
   }
 
   public Iterator<Integer> iterator() {
+    PriorityQueue<Integer> copy = new PriorityQueue<>(Collections.reverseOrder());
+    if (pq != null) {
+      pq.forEach(copy::add);
+    }
     return new Iterator<Integer>() {
 
       @Override
       public boolean hasNext() {
-        return !pq.isEmpty();
+        return !copy.isEmpty();
       }
 
       @Override
       public Integer next() {
-        return pq.poll();
+        return copy.poll();
       }
     };
   }
