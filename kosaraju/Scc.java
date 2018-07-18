@@ -99,7 +99,7 @@ public class Scc {
   }
 
   public Iterator<Integer> iterator() {
-    return new  Iterator<Integer>(){
+    return new Iterator<Integer>() {
 
       @Override
       public boolean hasNext() {
@@ -109,7 +109,8 @@ public class Scc {
       @Override
       public Integer next() {
         return pq.poll();
-      }};
+      }
+    };
   }
 
   public static void main(String[] args) throws IOException {
