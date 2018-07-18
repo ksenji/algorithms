@@ -47,11 +47,11 @@ public class Scc {
       }
 
       boolean[] visited = new boolean[V];
-      int[] finishTimes = new int[V];
+      int[] standings = new int[V];
       Stack<Integer> finish = new Stack<>();
       Stack<Integer> s = new Stack<>();
-      int finishTime = 0;
-      for (int i = V - 1; i >= 0; i--) {
+      int c = 0;
+      for (int i = 0; i < V; i++) {
         if (!visited[i]) {
           s.push(i);
           while (!s.isEmpty()) {
@@ -68,14 +68,13 @@ public class Scc {
             }
           }
           while (!finish.isEmpty()) {
-            finishTimes[finishTime++] = finish.pop();
+            standings[c++] = finish.pop();
           }
         }
       }
-
       visited = new boolean[V];
       for (int i = V - 1; i >= 0; i--) {
-        int v = finishTimes[i];
+        int v = standings[i];
         if (!visited[v]) {
           s.push(v);
           int count = 0;
@@ -127,6 +126,15 @@ public class Scc {
       sb.setLength(sb.length() - 1);
     }
     System.out.println(sb.toString());
-    // Prints 434821,968,459,313,211,205,197,177,173,168,162 
+
+    /* We get different results depending on which node is explored next in the DFS. In my iterative version, I explored in the reverse order essentially as we push them on to the stack. If you explore them in the same order, we get different results: 434821,968,459,313,278,211,205,197,177,162,152*/
+
+    /* Outputs: 434821,968,459,313,211,205,197,177,173,168,162 
+     * If we use the alogrithm from Coursera class from the Stanford professor who does the exploration first on the reverse graph and then pick the SCC on the original graph by exploring nodes based on their relative standings*/
+
+    /* Outputs:  434821,971,460,412,395,313,312,304,211,206,197 if we 
+     * use https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm or the one in https://web.stanford.edu/class/cs97si/06-basic-graph-algorithms.pdf
+     * Both of those algorithms talk about exporing DFS (maintaining their relative order of explorations on the original Graph) and then to pick the SCC run the algorithm on the reverse graph
+     */
   }
 }
