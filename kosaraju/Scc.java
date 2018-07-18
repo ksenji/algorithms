@@ -34,7 +34,7 @@ public class Scc {
     }
   }
 
-  private final PriorityQueue<Integer> pq = new PriorityQueue<>(Collections.reverseOrder());
+  private PriorityQueue<Integer> pq;
 
   public Scc(int V, String file) throws IOException {
     Graph g = new Graph(V);
@@ -46,55 +46,59 @@ public class Scc {
         g.addEdge(v - 1, w - 1); //0-index
       }
 
-      boolean[] visited = new boolean[V];
       int[] standings = new int[V];
-      Stack<Integer> finish = new Stack<>();
-      Stack<Integer> s = new Stack<>();
-      int c = 0;
-      for (int i = 0; i < V; i++) {
-        if (!visited[i]) {
-          s.push(i);
-          while (!s.isEmpty()) {
-            int top = s.pop();
-            if (!visited[top]) {
-              visited[top] = true;
-              LinkedList<Integer> edges = g.reverse[top];
-              if (edges != null) {
-                for (int edge : edges) {
+      for (int i = 0; i < standings.length; i++) {
+        standings[i] = i;
+      }
+      dfs(true, V, standings, g.normal);
+      pq = dfs(false, V, standings, g.reverse);
+    }
+  }
+
+  private PriorityQueue<Integer> dfs(boolean firstPass, int V, int[] standings, LinkedList<Integer>[] graph) {
+    PriorityQueue<Integer> pq = firstPass ? null : new PriorityQueue<>(Collections.reverseOrder());
+    boolean[] visited = new boolean[V];
+    boolean[] calculated = firstPass ? new boolean[V] : null;
+    Stack<Integer> s = new Stack<>();
+    int t = 0;
+    int[] newStandings = new int[V];
+    for (int i = V - 1; i >= 0; i--) {
+      int v = standings[i];
+      if (!visited[v]) {
+        s.push(v);
+        int count = 0;
+        while (!s.isEmpty()) {
+          int top = s.peek();
+          if (!visited[top]) {
+            visited[top] = true;
+            if (!firstPass) {
+              count++;
+            }
+            LinkedList<Integer> edges = graph[top];
+            if (edges != null) {
+              for (int edge : edges) {
+                if (!visited[edge]) {
                   s.push(edge);
                 }
               }
-              finish.push(top);
             }
-          }
-          while (!finish.isEmpty()) {
-            standings[c++] = finish.pop();
+          } else {
+            if (firstPass && !calculated[top]) {
+              newStandings[t++] = top;
+              calculated[top] = true;
+            }
+            s.pop();
           }
         }
-      }
-      visited = new boolean[V];
-      for (int i = V - 1; i >= 0; i--) {
-        int v = standings[i];
-        if (!visited[v]) {
-          s.push(v);
-          int count = 0;
-          while (!s.isEmpty()) {
-            int top = s.pop();
-            if (!visited[top]) {
-              visited[top] = true;
-              count++;
-              LinkedList<Integer> edges = g.normal[top];
-              if (edges != null) {
-                for (int edge : edges) {
-                  s.push(edge);
-                }
-              }
-            }
-          }
+        if (!firstPass) {
           pq.offer(count);
         }
       }
     }
+    if (firstPass) {
+      System.arraycopy(newStandings, 0, standings, 0, standings.length);
+    }
+    return pq;
   }
 
   public Iterator<Integer> iterator() {
@@ -125,16 +129,6 @@ public class Scc {
     if (sb.length() > 0) {
       sb.setLength(sb.length() - 1);
     }
-    System.out.println(sb.toString());
-
-    /* We get different results depending on which node is explored next in the DFS. In my iterative version, I explored in the reverse order essentially as we push them on to the stack. If you explore them in the same order, we get different results: 434821,968,459,313,278,211,205,197,177,162,152*/
-
-    /* Outputs: 434821,968,459,313,211,205,197,177,173,168,162 
-     * If we use the alogrithm from Coursera class from the Stanford professor who does the exploration first on the reverse graph and then pick the SCC on the original graph by exploring nodes based on their relative standings*/
-
-    /* Outputs:  434821,971,460,412,395,313,312,304,211,206,197 if we 
-     * use https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm or the one in https://web.stanford.edu/class/cs97si/06-basic-graph-algorithms.pdf
-     * Both of those algorithms talk about exporing DFS (maintaining their relative order of explorations on the original Graph) and then to pick the SCC run the algorithm on the reverse graph
-     */
+    System.out.println(sb.toString()); // Outputs: 434821,968,459,313,211,205,197,177,162,152,149 for the Coursera assignment
   }
 }
