@@ -76,11 +76,7 @@ public class Scc {
             }
             LinkedList<Integer> edges = graph[top];
             if (edges != null) {
-              for (int edge : edges) {
-                if (!visited[edge]) {
-                  s.push(edge);
-                }
-              }
+              s.addAll(edges);
             }
           } else {
             if (firstPass && !calculated[top]) {
