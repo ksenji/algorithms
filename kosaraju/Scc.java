@@ -4,36 +4,12 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.Stack;
 
 public class Scc {
-
-  private static final class Graph {
-
-    private final LinkedList<Integer>[] normal;
-
-    private final LinkedList<Integer>[] reverse;
-
-    Graph(int V) {
-      this.normal = (LinkedList<Integer>[]) new LinkedList[V];
-      this.reverse = (LinkedList<Integer>[]) new LinkedList[V];
-    }
-
-    public void addEdge(int v, int w) {
-      addEdge(normal, v, w);
-      addEdge(reverse, w, v);
-    }
-
-    private void addEdge(LinkedList<Integer>[] adj, int v, int w) {
-      if (adj[v] == null) {
-        adj[v] = new LinkedList<>();
-      }
-      adj[v].add(w);
-    }
-  }
-
   private PriorityQueue<Integer> pq;
 
   public Scc(int V, String file) throws IOException {
@@ -50,12 +26,12 @@ public class Scc {
       for (int i = 0; i < standings.length; i++) {
         standings[i] = i;
       }
-      dfs(true, V, standings, g.normal);
-      pq = dfs(false, V, standings, g.reverse);
+      dfs(true, V, standings, g);
+      pq = dfs(false, V, standings, g.reverse());
     }
   }
 
-  private PriorityQueue<Integer> dfs(boolean firstPass, int V, int[] standings, LinkedList<Integer>[] graph) {
+  private PriorityQueue<Integer> dfs(boolean firstPass, int V, int[] standings, Graph graph) {
     PriorityQueue<Integer> pq = firstPass ? null : new PriorityQueue<>(Collections.reverseOrder());
     boolean[] visited = new boolean[V];
     boolean[] calculated = firstPass ? new boolean[V] : null;
@@ -74,10 +50,7 @@ public class Scc {
             if (!firstPass) {
               count++;
             }
-            LinkedList<Integer> edges = graph[top];
-            if (edges != null) {
-              s.addAll(edges);
-            }
+            graph.edges(top).forEachRemaining(s::add);
           } else {
             if (firstPass && !calculated[top]) {
               newStandings[t++] = top;
@@ -114,6 +87,51 @@ public class Scc {
         return copy.poll();
       }
     };
+  }
+
+  private static final class Graph {
+
+    private final boolean normal;
+
+    private final LinkedList<Integer>[] forward;
+
+    private final LinkedList<Integer>[] reverse;
+
+    Graph(int V) {
+      this.normal = true;
+      this.forward = (LinkedList<Integer>[]) new LinkedList[V];
+      this.reverse = (LinkedList<Integer>[]) new LinkedList[V];
+    }
+
+    private Graph(boolean normal, Graph g) {
+      this.normal = normal;
+      this.forward = g.forward;
+      this.reverse = g.reverse;
+    }
+
+    public void addEdge(int v, int w) {
+      addEdge(forward, v, w);
+      addEdge(reverse, w, v);
+    }
+
+    public Iterator<Integer> edges(int v) {
+      List<Integer> edges = normal ? forward[v] : reverse[v];
+      if (edges == null) {
+        edges = Collections.emptyList();
+      }
+      return edges.iterator();
+    }
+
+    public Graph reverse() {
+      return new Graph(!normal, this);
+    }
+
+    private void addEdge(LinkedList<Integer>[] adj, int v, int w) {
+      if (adj[v] == null) {
+        adj[v] = new LinkedList<>();
+      }
+      adj[v].add(w);
+    }
   }
 
   public static void main(String[] args) throws IOException {
