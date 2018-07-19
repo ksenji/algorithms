@@ -37,7 +37,7 @@ public class Median {
   }
 
   private void balance() {
-    if (unequal()) {
+    if (!balanced()) {
       if (max.size() > min.size()) {
         min.add(max.poll());
       } else {
@@ -47,8 +47,8 @@ public class Median {
     }
   }
 
-  private boolean unequal() {
-    return !(max.size() == min.size() || max.size() == min.size() + 1);
+  private boolean balanced() {
+    return max.size() == min.size() || max.size() == min.size() + 1;
   }
 
   public int size() {
