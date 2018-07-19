@@ -48,7 +48,8 @@ public class Median {
   }
 
   private boolean balanced() {
-    return max.size() == min.size() || max.size() == min.size() + 1;
+    int diff = max.size() - min.size();
+    return diff == 0 || diff == 1;
   }
 
   public int size() {
