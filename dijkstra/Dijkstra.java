@@ -44,7 +44,11 @@ public class Dijkstra {
       }
       if (!visited.get(head.vertex)) {
         visited.set(head.vertex);
-        g.edges(head.vertex).forEachRemaining(e -> q.offer(new Iteration(e.vertex, head.distance + e.distance)));
+        g.edges(head.vertex).forEachRemaining(e -> {
+          if (!visited.get(e.vertex)) {
+            q.offer(new Iteration(e.vertex, head.distance + e.distance));
+          }
+        });
       }
     }
     return 1000000;
