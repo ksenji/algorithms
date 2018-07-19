@@ -33,21 +33,13 @@ public class Dijkstra {
     }
   }
 
-  public int[] shortestDistance(int v, int[] vertices) {
-    int[] distances = new int[vertices.length];
-    for (int i = 0; i < vertices.length; i++) {
-      distances[i] = shortestDistance(v - 1, vertices[i] - 1);
-    }
-    return distances;
-  }
-
-  private int shortestDistance(int v, int w) {
+  public int shortestDistance(int v, int w) {
     PriorityQueue<Iteration> q = new PriorityQueue<>();
-    q.offer(new Iteration(v, 0));
+    q.offer(new Iteration(v - 1, 0));
     BitSet visited = new BitSet();
     while (!q.isEmpty()) {
       Iteration head = q.poll();
-      if (head.vertex == w) {
+      if (head.vertex == w - 1) {
         return head.distance;
       }
       if (!visited.get(head.vertex)) {
@@ -111,12 +103,12 @@ public class Dijkstra {
 
   public static void main(String[] args) throws Exception {
     Dijkstra d = new Dijkstra(Integer.parseInt(args[0]), args[1]);
-    int[] distances = d.shortestDistance(1, new int[] { 7, 37, 59, 82, 99, 115, 133, 165, 188, 197 });
+    int[] vertices = new int[] { 7, 37, 59, 82, 99, 115, 133, 165, 188, 197 };
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < distances.length; i++) {
-      int distance = distances[i];
-      sb.append(distance);
-      if (i < distances.length - 1) {
+    for (int i = 0; i < vertices.length; i++) {
+      int w = vertices[i];
+      sb.append(d.shortestDistance(1, w));
+      if (i < vertices.length - 1) {
         sb.append(",");
       }
     }
