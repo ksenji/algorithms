@@ -33,11 +33,12 @@ public class Scc {
 
   private PriorityQueue<Integer> dfs(boolean firstPass, int V, int[] standings, Graph graph) {
     PriorityQueue<Integer> pq = firstPass ? null : new PriorityQueue<>(Collections.reverseOrder());
-    boolean[] visited = new boolean[V];
     boolean[] calculated = firstPass ? new boolean[V] : null;
+    int[] newStandings = firstPass ? new int[V] : null;
+
+    boolean[] visited = new boolean[V];
     Stack<Integer> s = new Stack<>();
     int t = 0;
-    int[] newStandings = new int[V];
     for (int i = V - 1; i >= 0; i--) {
       int v = standings[i];
       if (!visited[v]) {
