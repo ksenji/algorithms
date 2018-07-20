@@ -113,8 +113,8 @@ public class Dijkstra {
     Map<Integer, Integer> distancesMap = d.getShortestDistances(1);
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < vertices.length; i++) {
-      int dis = distancesMap.get(vertices[i]);
-      if (dis == Integer.MAX_VALUE) {
+      Integer dis = distancesMap.get(vertices[i]);
+      if (dis == null) {
         dis = 1000000;
       }
       sb.append(dis);
