@@ -3,9 +3,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -31,19 +33,19 @@ public class Dijkstra {
         scanner.useDelimiter(delimiter);
       }
     }
+
   }
 
-  public int shortestDistance(int v, int w) {
+  public Map<Integer, Integer> getShortestDistances(int v) {
+    Map<Integer, Integer> distancesMap = new HashMap<>();
     PriorityQueue<Iteration> q = new PriorityQueue<>();
     q.offer(new Iteration(v - 1, 0));
     BitSet visited = new BitSet();
     while (!q.isEmpty()) {
       Iteration head = q.poll();
-      if (head.vertex == w - 1) {
-        return head.distance;
-      }
       if (!visited.get(head.vertex)) {
         visited.set(head.vertex);
+        distancesMap.put(head.vertex + 1, head.distance);
         g.edges(head.vertex).forEachRemaining(e -> {
           if (!visited.get(e.vertex)) {
             q.offer(new Iteration(e.vertex, head.distance + e.distance));
@@ -51,7 +53,7 @@ public class Dijkstra {
         });
       }
     }
-    return 1000000;
+    return distancesMap;
   }
 
   private static final class Iteration implements Comparable<Iteration> {
@@ -108,10 +110,14 @@ public class Dijkstra {
   public static void main(String[] args) throws Exception {
     Dijkstra d = new Dijkstra(Integer.parseInt(args[0]), args[1]);
     int[] vertices = new int[] { 7, 37, 59, 82, 99, 115, 133, 165, 188, 197 };
+    Map<Integer, Integer> distancesMap = d.getShortestDistances(1);
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < vertices.length; i++) {
-      int w = vertices[i];
-      sb.append(d.shortestDistance(1, w));
+      int dis = distancesMap.get(vertices[i]);
+      if (dis == Integer.MAX_VALUE) {
+        dis = 1000000;
+      }
+      sb.append(dis);
       if (i < vertices.length - 1) {
         sb.append(",");
       }
