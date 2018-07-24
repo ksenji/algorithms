@@ -7,20 +7,27 @@ public class SeamCarver {
 
   private Picture picture;
 
+  private final boolean normal;
+
   public SeamCarver(Picture picture) {
-    this.picture = new Picture(requireNonNull(picture, "picture cannot be null"));
+    this(new Picture(requireNonNull(picture, "picture cannot be null")), true);
+  }
+
+  private SeamCarver(Picture picture, boolean normal) {
+    this.picture = picture;
+    this.normal = normal;
   }
 
   public Picture picture() {
-    return new Picture(this.picture);
+    return new Picture(picture);
   }
 
   public int width() {
-    return this.picture.width();
+    return normal ? picture.width() : picture.height();
   }
 
   public int height() {
-    return this.picture.height();
+    return normal ? picture.height() : picture.width();
   }
 
   public double energy(int col, int row) {
@@ -32,75 +39,16 @@ public class SeamCarver {
     if (row == 0 || col == 0 || col == w || row == h) {
       return 1000d;
     }
-    int deltaX = differenceSquaredSum(picture.get(col - 1, row), picture.get(col + 1, row));
-    int deltaY = differenceSquaredSum(picture.get(col, row - 1), picture.get(col, row + 1));
+    int deltaX = differenceSquaredSum(get(col - 1, row), get(col + 1, row));
+    int deltaY = differenceSquaredSum(get(col, row - 1), get(col, row + 1));
     return Math.sqrt(deltaX + deltaY);
   }
 
   public int[] findHorizontalSeam() {
-    return findSeam(Orientation.HORIZONTAL);
+    return flip().findVerticalSeam();
   }
 
   public int[] findVerticalSeam() {
-    return findSeam(Orientation.VERTICAL);
-  }
-
-  public void removeHorizontalSeam(int[] seam) {
-    removeSeam(Orientation.HORIZONTAL, requireNonNull(seam, "seam cannot be null"));
-  }
-
-  public void removeVerticalSeam(int[] seam) {
-    removeSeam(Orientation.VERTICAL, requireNonNull(seam, "seam cannot be null"));
-  }
-
-  private void removeSeam(Orientation orientation, int[] seam) {
-    boolean vertical = (orientation == Orientation.VERTICAL);
-    int w = width();
-    int h = height();
-
-    if (vertical) {
-      if (vertical && seam.length != h || seam.length != w) {
-        throw new IllegalArgumentException();
-      }
-    } else if (seam.length != w) {
-      throw new IllegalArgumentException();
-    }
-    int prev = -1;
-    for (int s : seam) {
-      if (prev != -1 && Math.abs(s - prev) > 1) {
-        throw new IllegalArgumentException();
-      }
-      prev = s;
-    }
-    Picture pict = new Picture(vertical ? w - 1 : w, vertical ? h : h - 1);
-    for (int col = 0; col < w; col++) {
-      for (int row = 0; row < h; row++) {
-        int x = col;
-        int y = row;
-        if (vertical) {
-          int idx = seam[row];
-          if (prev == -1) {
-            prev = idx;
-          }
-          if (col > seam[row]) {
-            x--;
-          } else if (col == seam[row]) {
-            continue;
-          }
-        } else {
-          if (row > seam[col]) {
-            y--;
-          } else if (row == seam[col]) {
-            continue;
-          }
-        }
-        pict.setRGB(x, y, picture.getRGB(col, row));
-      }
-    }
-    this.picture = pict;
-  }
-
-  private int[] findSeam(Orientation orientation) {
     int w = width();
     int h = height();
     int len = w * h;
@@ -111,80 +59,94 @@ public class SeamCarver {
     double[] energies = new double[len];
     for (int row = 0; row < h; row++) {
       for (int col = 0; col < w; col++) {
-        energies[encode(col, row, w)] = energy(col, row);
+        energies[encode(col, row)] = energy(col, row);
       }
     }
 
-    boolean vertical = (orientation == Orientation.VERTICAL);
     int p = 0;
     double min = Double.POSITIVE_INFINITY;
-    if (vertical) {
-      for (int row = 0; row < h; row++) {
-        for (int col = 0; col < w; col++) {
-          int idx = encode(col, row, w);
-          double energy = energies[idx];
-          if (pathTo[idx] == Double.POSITIVE_INFINITY) {
-            pathTo[idx] = energy;
+    for (int row = 0; row < h; row++) {
+      for (int col = 0; col < w; col++) {
+        int idx = encode(col, row);
+        double energy = energies[idx];
+        if (pathTo[idx] == Double.POSITIVE_INFINITY) {
+          pathTo[idx] = energy;
+        }
+        double parentEnergy = pathTo[idx];
+        if (row < h - 1) {
+          if (col > 0) {
+            updateEnergy(edgeTo, pathTo, energies, col - 1, row + 1, idx, parentEnergy);
           }
-          double parentEnergy = pathTo[idx];
-          if (row < h - 1) {
-            if (col > 0) {
-              updateEnergy(w, edgeTo, pathTo, energies, col - 1, row + 1, idx, parentEnergy);
-            }
-            updateEnergy(w, edgeTo, pathTo, energies, col, row + 1, idx, parentEnergy);
-            if (col < w - 1) {
-              updateEnergy(w, edgeTo, pathTo, energies, col + 1, row + 1, idx, parentEnergy);
-            }
-          }
-          if (row == h - 1) {
-            if (min > parentEnergy) {
-              min = parentEnergy;
-              p = idx;
-            }
+          updateEnergy(edgeTo, pathTo, energies, col, row + 1, idx, parentEnergy);
+          if (col < w - 1) {
+            updateEnergy(edgeTo, pathTo, energies, col + 1, row + 1, idx, parentEnergy);
           }
         }
-      }
-    } else {
-      for (int col = 0; col < w; col++) {
-        for (int row = 0; row < h; row++) {
-          int idx = encode(col, row, w);
-          double energy = energies[idx];
-          if (pathTo[idx] == Double.POSITIVE_INFINITY) {
-            pathTo[idx] = energy;
-          }
-          double parentEnergy = pathTo[idx];
-          if (col < w - 1) {
-            if (row > 0) {
-              updateEnergy(w, edgeTo, pathTo, energies, col + 1, row - 1, idx, parentEnergy);
-            }
-            updateEnergy(w, edgeTo, pathTo, energies, col + 1, row, idx, parentEnergy);
-            if (row < h - 1) {
-              updateEnergy(w, edgeTo, pathTo, energies, col + 1, row + 1, idx, parentEnergy);
-            }
-          }
-          if (col == w - 1) {
-            if (min > parentEnergy) {
-              min = parentEnergy;
-              p = idx;
-            }
+        if (row == h - 1) {
+          if (min > parentEnergy) {
+            min = parentEnergy;
+            p = idx;
           }
         }
       }
     }
 
-    int[] seams = new int[vertical ? h : w];
+    int[] seams = new int[h];
     int j = seams.length - 1;
     do {
-      seams[j] = vertical ? decodeCol(p, w) : decodeRow(p, w);
+      seams[j] = decode(p);
       p = edgeTo[p];
     } while (j-- > 0);
 
     return seams;
   }
 
-  private void updateEnergy(int width, int[] edgeTo, double[] pathTo, double[] energies, int col, int row, int parent,
+  public void removeHorizontalSeam(int[] seam) {
+    this.picture = flip().removeSeam(requireNonNull(seam, "seam cannot be null"));
+  }
+
+  public void removeVerticalSeam(int[] seam) {
+    this.picture = removeSeam(requireNonNull(seam, "seam cannot be null"));
+  }
+
+  private Picture removeSeam(int[] seam) {
+    int w = width();
+    int h = height();
+
+    if (seam.length != h) {
+      throw new IllegalArgumentException();
+    }
+
+    int prev = -1;
+    for (int s : seam) {
+      if (prev != -1 && Math.abs(s - prev) > 1) {
+        throw new IllegalArgumentException();
+      }
+      prev = s;
+    }
+    Picture picture = newPicture(w - 1, h);
+    for (int col = 0; col < w; col++) {
+      for (int row = 0; row < h; row++) {
+        int x = col;
+        int y = row;
+        int idx = seam[row];
+        if (prev == -1) {
+          prev = idx;
+        }
+        if (col > seam[row]) {
+          x--;
+        } else if (col == seam[row]) {
+          continue;
+        }
+        setRGB(picture, x, y, getRGB(col, row));
+      }
+    }
+    return picture;
+  }
+
+  private void updateEnergy(int[] edgeTo, double[] pathTo, double[] energies, int col, int row, int parent,
       double parentEnergy) {
-    int k = encode(col, row, width);
+    int k = encode(col, row);
     double newEnergy = energies[k] + parentEnergy;
     if (newEnergy < pathTo[k]) {
       pathTo[k] = newEnergy;
@@ -192,16 +154,36 @@ public class SeamCarver {
     }
   }
 
-  private int encode(int col, int row, int w) {
-    return row * w + col;
+  private int encode(int col, int row) {
+    return row * width() + col;
   }
 
-  private int decodeCol(int idx, int w) {
-    return idx % w;
+  private int decode(int idx) {
+    return idx % width();
   }
 
-  private int decodeRow(int idx, int w) {
-    return idx / w;
+  private SeamCarver flip() {
+    return new SeamCarver(picture, !normal);
+  }
+
+  private Picture newPicture(int width, int height) {
+    return normal ? new Picture(width, height) : new Picture(height, width);
+  }
+
+  private Color get(int col, int row) {
+    return normal ? picture.get(col, row) : picture.get(row, col);
+  }
+
+  private int getRGB(int col, int row) {
+    return normal ? picture.getRGB(col, row) : picture.getRGB(row, col);
+  }
+
+  private void setRGB(Picture picture, int col, int row, int rgb) {
+    if (normal) {
+      picture.setRGB(col, row, rgb);
+    } else {
+      picture.setRGB(row, col, rgb);
+    }
   }
 
   private int differenceSquaredSum(Color c1, Color c2) {
@@ -214,10 +196,6 @@ public class SeamCarver {
 
   private int square(int num) {
     return num * num;
-  }
-
-  private enum Orientation {
-    HORIZONTAL, VERTICAL
   }
 
   private static <T> T requireNonNull(T t, String message) {
