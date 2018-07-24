@@ -129,16 +129,12 @@ public class SeamCarver {
       for (int row = 0; row < h; row++) {
         int x = col;
         int y = row;
-        int idx = seam[row];
-        if (prev == -1) {
-          prev = idx;
-        }
         if (col > seam[row]) {
           x--;
-        } else if (col == seam[row]) {
-          continue;
         }
-        setRGB(picture, x, y, getRGB(col, row));
+        if (col != seam[row]) {
+          setRGB(picture, x, y, getRGB(col, row));
+        }
       }
     }
     return picture;
